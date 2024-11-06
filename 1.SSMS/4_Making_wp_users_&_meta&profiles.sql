@@ -108,7 +108,7 @@ BEGIN
         'Member',          -- title
         3,                 -- groupid
         NULL, NULL, NULL,  -- secondary_groupids, avatar, cover
-        ISNULL(@posts, 0),    -- posts
+        ISNULL(@posts, 0) + ISNULL(@topics, 0),    -- posts
         ISNULL(@topics, 0),    -- topics
         0, 0, 0,           -- questions, answers, comments
         NULL, NULL,        -- reactions_in, reactions_out
