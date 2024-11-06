@@ -23,3 +23,15 @@ INNER JOIN [SimorghPortalZero972].[dbo].[activeforums_Replies] AS replies
     ON topics_tracking.LastReplyId = replies.ReplyId
 INNER JOIN [transfering].[dbo].[wp_wpforo_meta_posts] AS meta_posts
     ON replies.ContentId = meta_posts.original_contentid;
+
+UPDATE posts
+SET posts.userid = meta_users.new_ID
+FROM [transfering].[dbo].[wp_wpforo_posts] AS posts
+JOIN [transfering].[dbo].[wp_meta_users] AS meta_users
+    ON posts.userid = meta_users.old_UserID;
+
+UPDATE topics
+SET topics.userid = meta_users.new_ID
+FROM [transfering].[dbo].[wp_wpforo_topics] AS topics
+JOIN [transfering].[dbo].[wp_meta_users] AS meta_users
+    ON topics.userid = meta_users.old_UserID;
