@@ -27,37 +27,38 @@ END
 -- Create wp_wpforo_profiles table if not exists
 IF OBJECT_ID('[transfering].[dbo].[wp_wpforo_profiles]', 'U') IS NULL
 BEGIN
-	CREATE TABLE [transfering].[dbo].[wp_wpforo_profiles] (
-		userid INT NULL,
-		title NVARCHAR(255) DEFAULT 'Member',
-		groupid INT DEFAULT 3,  -- Setting groupid to 3 as requested
-		secondary_groupid INT NULL,
-		avatars NVARCHAR(MAX) NULL,
-		cover NVARCHAR(MAX) NULL,
-		posts INT DEFAULT 0,
-		topics INT DEFAULT 0,
-		questions INT DEFAULT 0,
-		answers INT DEFAULT 0,
-		comments INT DEFAULT 0,
-		reactions_in INT NULL,
-		reactions_out INT NULL,
-		points INT DEFAULT 0,
-		custom_points INT DEFAULT 0,
-		online_time INT DEFAULT 0,
-		timezone NVARCHAR(255) NULL,
-		location NVARCHAR(255) NULL,
-		signature NVARCHAR(MAX) NULL,
-		about NVARCHAR(MAX) NULL,
-		occupation NVARCHAR(MAX) NULL,
-		status NVARCHAR(50) DEFAULT 'active',
-		is_email_confirmed INT DEFAULT 0,
-		is_mention_muted INT DEFAULT 0,
-		fields NVARCHAR(MAX) NULL
-	);
+    CREATE TABLE [transfering].[dbo].[wp_wpforo_profiles] (
+        userid BIGINT NULL,
+        title NVARCHAR(255) DEFAULT 'Member',
+        groupid INT DEFAULT 3,  -- Setting groupid to 3 as requested
+        secondary_groupids NVARCHAR(255) DEFAULT NULL,
+        avatar NVARCHAR(991) DEFAULT NULL,
+        cover NVARCHAR(255) DEFAULT NULL,
+        posts INT DEFAULT 0,
+        topics INT DEFAULT 0,
+        questions INT DEFAULT 0,
+        answers INT DEFAULT 0,
+        comments INT DEFAULT 0,
+        reactions_in TEXT NULL,
+        reactions_out TEXT NULL,
+        points INT DEFAULT 0,
+        custom_points INT DEFAULT 0,
+        online_time INT DEFAULT 0,
+        timezone NVARCHAR(255) NULL,
+        location NVARCHAR(255) NULL,
+        signature TEXT NULL,
+        about TEXT NULL,
+        occupation TEXT NULL,
+        status NVARCHAR(8) DEFAULT 'active',
+        is_email_confirmed INT DEFAULT 0,
+        is_mention_muted INT DEFAULT 0,
+        fields TEXT DEFAULT NULL
+    );
 END
 
 -- Declare variables to use for inserting data
 DECLARE @OldUserID INT, @Username NVARCHAR(60), @DisplayName NVARCHAR(50), @Email NVARCHAR(100), @NewID INT;
+DECLARE @posts INT, @topics INT;
 
 -- Start processing users from the old Users table
 DECLARE UserCursor CURSOR FOR
@@ -76,8 +77,8 @@ BEGIN
     )
     VALUES (
         @Username,
-        '$P$BNryRLMcLaqx6C/P1EeUeSeHGxH7Lu/',  -- You need to replace this with the correct WordPress hashed password
-        @DisplayName,
+        '$P$BNryRLMcLaqx6C/P1EeUeSeHGxH7Lu/',  -- Replace this with the correct WordPress hashed password
+        REPLACE(@DisplayName, ' ', '-'),
         @Email,
         NULL,
         '2024-10-02 14:10:40',
@@ -93,22 +94,33 @@ BEGIN
     INSERT INTO [transfering].[dbo].[wp_meta_users] (old_UserID, new_ID)
     VALUES (@OldUserID, @NewID);
 
-    -- Insert into wp_wpforo_profiles using the same new ID
+    -- Get the ReplyCount and TopicCount from activeforums_UserProfiles if available
+    SELECT  @posts = ReplyCount, @topics = TopicCount
+    FROM [SimorghPortalZero972].[dbo].[activeforums_UserProfiles]
+    WHERE UserId = @OldUserID;
+
+    -- Insert into wp_wpforo_profiles using the new ID and retrieved counts
     INSERT INTO [transfering].[dbo].[wp_wpforo_profiles] (
-        userid, title, groupid, secondary_groupid, avatars, cover, posts, topics, questions, answers, comments, reactions_in, reactions_out, points, custom_points, online_time, timezone, location, signature, about, occupation, status, is_email_confirmed, is_mention_muted, fields
+        userid, title, groupid, secondary_groupids, avatar, cover, posts, topics, questions, answers, comments, reactions_in, reactions_out, points, custom_points, online_time, timezone, location, signature, about, occupation, status, is_email_confirmed, is_mention_muted, fields
     )
     VALUES (
-        @NewID,  -- userid matches new ID from wp_users
-        'Member',  -- title
-        3,  -- groupid
-        NULL, NULL, NULL,  -- secondary_groupid, avatars, cover
-        0, 0, 0, 0, 0,  -- posts, topics, questions, answers, comments
-        NULL, NULL,  -- reactions_in, reactions_out
-        0, 0, 0,  -- points, custom_points, online_time
+        @NewID,            -- userid matches new ID from wp_users
+        'Member',          -- title
+        3,                 -- groupid
+        NULL, NULL, NULL,  -- secondary_groupids, avatar, cover
+        ISNULL(@posts, 0),    -- posts
+        ISNULL(@topics, 0),    -- topics
+        0, 0, 0,           -- questions, answers, comments
+        NULL, NULL,        -- reactions_in, reactions_out
+        0, 0, 0,           -- points, custom_points, online_time
         NULL, NULL, NULL, NULL, NULL,  -- timezone, location, signature, about, occupation
-        'active',  -- status
-        0, 0, NULL  -- is_email_confirmed, is_mention_muted, fields
+        'active',          -- status
+        0, 0, NULL         -- is_email_confirmed, is_mention_muted, fields
     );
+
+    -- Reset variables for the next iteration
+    SET @posts = NULL;
+    SET @topics = NULL;
 
     -- Fetch next user
     FETCH NEXT FROM UserCursor INTO @OldUserID, @Username, @DisplayName, @Email;
