@@ -153,7 +153,17 @@ Once you have the FastCGI module installed, you can proceed with configuring PHP
             - Variable name: PHPRC
             - Variable value: The path to your PHP directory (e.g., C:\PHP).
         - This will tell IIS where to find the php.ini file.
+    - Check php.ini for Correct Extension Directory:
 
+        - Open your php.ini file and check the extension_dir directive. This should point to the directory where the PHP extensions are located.
+        - Look for a line like this:
+        ```
+        extension_dir = "ext"
+        ```
+        - If you have PHP installed in C:\Program Files\php\, then you may need to specify the full path:
+        ```
+        extension_dir = "C:\Program Files\php\ext"
+        ```
 3. Verify the php.ini File is Loaded
 
     - Restart IIS:
@@ -172,11 +182,15 @@ Once you have the FastCGI module installed, you can proceed with configuring PHP
 
         ```
         ;extension=mysqli
+        ;extension=pdo_mysql
+        ;extension=mbstring
         ```
 
     - Remove the semicolon (;) to uncomment the line:
         ```
         extension=mysqli
+        extension=pdo_mysql
+        extension=mbstring
         ```
         - Save the file.
 
@@ -187,4 +201,6 @@ Once you have the FastCGI module installed, you can proceed with configuring PHP
 
     - Check phpinfo() Once Again:
         - Reload info.php.
-        - Search for the mysqli extension to confirm it is enabled and loaded.    
+        - Search for the mysqli extension to confirm it is enabled and loaded.
+
+    
