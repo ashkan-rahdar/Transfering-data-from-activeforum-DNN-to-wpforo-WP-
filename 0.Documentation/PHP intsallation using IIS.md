@@ -46,6 +46,15 @@ In this readme file I want to show step by step of PHP Installation using IIS
     - Once the installation is complete, open a web browser and type http://localhost.
     - You should see the default IIS welcome page, indicating that IIS is successfully installed.
 
+6. Set Correct Permissions
+
+    - Make sure that the IIS user has permission to access the C:\inetpub\wwwroot directory:
+        - Right-click on the wwwroot folder, and select Properties.
+        - Go to the Security tab.
+        - Click Edit, then Add.
+        - Enter IIS_IUSRS and click Check Names to validate it.
+        - Click OK, and then grant Read & Execute permissions to this user.    
+
 
 ## PHP
 
@@ -78,7 +87,16 @@ In this readme file I want to show step by step of PHP Installation using IIS
     - Click New and add the path to your PHP installation (e.g., C:\PHP).
     - Click OK to close all dialog boxes.
 
-5. Test PHP Installation:
+5. Add index.php to Default Documents in IIS:
+
+    - Open IIS Manager (inetmgr).
+    - In the Connections pane, select your website (e.g., YourWordPressSite).
+    - In the middle pane, double-click on Default Document.
+    - In the Actions pane on the right, click Add.
+    - Enter index.php and click OK.
+    - Ensure index.php is listed at the top or near the top of the default documents list.
+
+6. Test PHP Installation:
 
     - Create a new file called info.php in the default web directory (usually C:\inetpub\wwwroot).
     - Open Notepad and add the following code:
@@ -91,3 +109,82 @@ phpinfo();
 Save the file as info.php.
 Open a web browser and navigate to http://localhost/info.php.
 You should see the PHP information page.
+
+
+### Configure FastCGI for PHP
+
+Once you have the FastCGI module installed, you can proceed with configuring PHP in IIS:
+
+- Add PHP to IIS:
+    - Open IIS Manager.
+    - Click on your server name in the left pane (under Connections).
+    - In the middle pane, double-click on Handler Mappings.
+    - On the right pane, click Add Module Mapping.
+        - Request Path: *.php
+        - Module: FastCgiModule
+        - Executable: Path to your PHP installation’s php-cgi.exe (e.g., C:\PHP\php-cgi.exe).
+        - Name: PHP_via_FastCGI
+    - Click OK and confirm the prompt.
+
+
+### php.ini
+
+1. Locate the Correct php.ini File
+
+    - Check the PHP Installation Directory:
+        - Go to the folder where PHP is installed. This is typically something like C:\PHP or C:\Program Files\PHP.
+        - Look for a file named php.ini or a sample configuration file named php.ini-development or php.ini-production.
+
+    - If No php.ini File Exists:
+        - If you don't see a php.ini file, copy either php.ini-development or php.ini-production and rename the copy to php.ini.
+
+2. Configure IIS to Load the Correct php.ini File
+
+    - Set the Path to the php.ini in IIS:
+        - Open IIS Manager (inetmgr).
+        In the Connections pane, select your server (the root node).
+        - In the middle pane, double-click on PHP Manager (if you don’t see it, you might need to install it via Web Platform Installer or manually).
+        - In PHP Manager, click Check phpinfo() to see the current PHP configuration.
+        - Ensure that the Configuration File path points to the correct php.ini file.
+    - Manually Add Path to php.ini (If Needed):
+        - Open the Windows Control Panel.
+        - Go to System > Advanced system settings > Environment Variables.
+        - In the System variables section, find the variable called PHPRC. If it does not exist, click New and set:
+            - Variable name: PHPRC
+            - Variable value: The path to your PHP directory (e.g., C:\PHP).
+        - This will tell IIS where to find the php.ini file.
+
+3. Verify the php.ini File is Loaded
+
+    - Restart IIS:
+        - Open IIS Manager.
+        - In the Actions pane, click Restart.
+
+    - Check phpinfo() Again:
+        - Open an info.php in your browser.
+        - Verify that the Configuration File (php.ini) Path now shows the correct path (e.g., C:\PHP\php.ini).
+
+4. Enable mysqli Extension
+
+    - Open php.ini and Enable the mysqli Extension:
+        - After ensuring that PHP is loading the correct php.ini file, open the php.ini file in a text editor.
+        - Find the following line:
+
+        ```
+        ;extension=mysqli
+        ```
+
+    - Remove the semicolon (;) to uncomment the line:
+        ```
+        extension=mysqli
+        ```
+        - Save the file.
+
+    - Restart IIS Again:
+        - After making changes to php.ini, restart IIS to apply the changes.
+
+5. Verify mysqli is Loaded
+
+    - Check phpinfo() Once Again:
+        - Reload info.php.
+        - Search for the mysqli extension to confirm it is enabled and loaded.    
