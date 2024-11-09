@@ -1,6 +1,11 @@
 # PHP Installation using IIS
 
 In this readme file I want to show step by step of PHP Installation using IIS
+*** please note that any changes in configs need and a restart in IIS:
+cmd line:
+````
+iisreset
+````
 
 ## IIS
 
